@@ -3,16 +3,20 @@ FastAPI main application
 """
 import sys
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from backend.app.api import auth, query
 from backend.app.core.database import init_db
+from backend.app.core.rate_limiter import rate_limit_middleware
+from backend.app.core.logging_config import setup_logging
+from config.settings import settings
 import logging
 
-logging.basicConfig(level=logging.INFO)
+# Setup structured logging
+setup_logging(log_level="INFO" if not settings.DEBUG else "DEBUG", log_file="logs/app.log")
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
@@ -29,6 +33,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting middleware
+@app.middleware("http")
+async def rate_limit(request: Request, call_next):
+    return await rate_limit_middleware(request, call_next)
 
 # Include routers
 app.include_router(auth.router)
