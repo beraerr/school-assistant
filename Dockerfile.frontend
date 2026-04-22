@@ -1,17 +1,18 @@
-# Frontend Dockerfile for Streamlit
+# Frontend Dockerfile — Streamlit + data_science görselleri için
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt data_science/requirements-ds.txt ./
+RUN pip install --no-cache-dir -r requirements.txt \
+ && pip install --no-cache-dir -r requirements-ds.txt
 
-# Copy frontend code
+# Frontend + data_science raporları (DS sekmesi için)
 COPY frontend ./frontend
+COPY data_science ./data_science
+COPY config ./config
 
-# Expose Streamlit port
 EXPOSE 8501
 
-# Run Streamlit
-CMD ["streamlit", "run", "frontend/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Railway dinamik PORT kullanır; yoksa 8501 default
+CMD ["sh", "-c", "streamlit run frontend/app.py --server.port=${PORT:-8501} --server.address=0.0.0.0 --server.headless=true"]
