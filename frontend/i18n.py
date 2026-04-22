@@ -97,14 +97,38 @@ MESSAGES: Dict[str, Dict[Lang, str]] = {
     },
     "ds_download_header": {"tr": "Rapor İndirme Merkezi", "en": "Report download center"},
     "ds_download_blurb": {
-        "tr": "Müdür kullanıcıları, üretilen rapor dosyalarını aşağıdan indirilebilir formatlarda dışa aktarabilir.",
-        "en": "Principal users can export generated report files below in downloadable formats.",
+        "tr": "Aşağıdan tek PDF olarak tüm özet raporu indirin: biri Türkçe, biri İngilizce metin ve görsellerle (pipeline çıktılarından üretilir).",
+        "en": "Download one consolidated PDF below: Turkish or English narrative with figures built from your pipeline outputs.",
     },
     "ds_no_downloadables": {
         "tr": "İndirilebilir rapor dosyası bulunamadı.",
         "en": "No downloadable report files were found.",
     },
     "download_file_btn": {"tr": "Dosyayı indir", "en": "Download file"},
+    "ds_pdf_cover_title": {
+        "tr": "UCI Öğrenci Riski — Veri Bilimi Raporu",
+        "en": "UCI Student Risk — Data Science Report",
+    },
+    "ds_pdf_cover_sub": {
+        "tr": "Model seçimi, EDA görselleri, karşılaştırmalar ve üretim notları (tek dosya).",
+        "en": "Model selection, EDA figures, comparisons, and deployment notes (single file).",
+    },
+    "ds_pdf_section_eda": {
+        "tr": "Sosyal faktörler — EDA (yan yana)",
+        "en": "Social factors — EDA (side by side)",
+    },
+    "ds_pdf_section_grades_abs": {
+        "tr": "Not ve devamsızlık dağılımları",
+        "en": "Grade and absence distributions",
+    },
+    "ds_pdf_leakage_title": {
+        "tr": "Hedef ve özellikler (sızıntı notu)",
+        "en": "Target vs features (leakage note)",
+    },
+    "ds_pdf_btn_tr": {"tr": "Türkçe PDF indir", "en": "Download Turkish PDF"},
+    "ds_pdf_btn_en": {"tr": "İngilizce PDF indir", "en": "Download English PDF"},
+    "ds_pdf_generating": {"tr": "PDF oluşturuluyor…", "en": "Building PDF…"},
+    "ds_pdf_error": {"tr": "PDF oluşturulamadı.", "en": "Could not build the PDF."},
     "ds_figures_source_note": {
         "tr": "Bu sekmedeki görseller ve CSV dosyaları yerelde `python data_science/src/risk_model_pipeline.py` "
         "çalıştırıldığında üretilir; güncel olmaları için pipeline'ı (ve gerekiyorsa notebook'u) yeniden çalıştırın.",

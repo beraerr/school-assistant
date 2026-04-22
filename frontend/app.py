@@ -8,6 +8,7 @@ import requests
 import streamlit as st
 
 from frontend.i18n import role_name, t
+from frontend.ds_report_pdf import build_uci_ds_report_pdf
 
 try:
     import matplotlib.pyplot as plt
@@ -29,7 +30,11 @@ st.set_page_config(
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DS_FIGURES = PROJECT_ROOT / "data_science" / "reports" / "figures"
 DS_TABLES = PROJECT_ROOT / "data_science" / "reports" / "tables"
-DS_REPORTS_ROOT = PROJECT_ROOT / "data_science" / "reports"
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def _cached_uci_ds_pdf(lang: str, project_root_s: str) -> bytes:
+    return build_uci_ds_report_pdf(lang=lang, project_root=Path(project_root_s))
 
 def lang() -> Lang:
     return st.session_state.ui_lang  # type: ignore[return-value]
@@ -233,23 +238,6 @@ def pack_query_assistant_turn(result: dict, lng: Lang) -> Dict[str, Any]:
     df = pd.DataFrame(rows) if rows and mode == "sql" else None
     text = "\n".join(lines).strip() or "…"
     return {"md": text, "df": df}
-
-def report_download_candidates() -> list[Path]:
-    patterns = ("*.pdf", "*.docx", "*.txt", "*.csv", "*.png")
-    files: list[Path] = []
-    for pattern in patterns:
-        files.extend(DS_REPORTS_ROOT.rglob(pattern))
-    return sorted(files, key=lambda p: str(p).lower())
-
-def mime_type_for(path: Path) -> str:
-    suffix = path.suffix.lower()
-    return {
-        ".pdf": "application/pdf",
-        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ".txt": "text/plain",
-        ".csv": "text/csv",
-        ".png": "image/png",
-    }.get(suffix, "application/octet-stream")
 
 st.title(t("page_title", L))
 st.caption("Türkçe + English UI | Aynı backend")
@@ -462,23 +450,36 @@ else:
 
         st.subheader(t("ds_download_header", L))
         st.markdown(t("ds_download_blurb", L))
-        downloadable_files = report_download_candidates()
-        if downloadable_files:
-            for i, report_file in enumerate(downloadable_files):
-                col_name, col_action = st.columns([4, 1])
-                with col_name:
-                    st.code(str(report_file.relative_to(PROJECT_ROOT)))
-                with col_action:
-                    st.download_button(
-                        label=t("download_file_btn", L),
-                        data=report_file.read_bytes(),
-                        file_name=report_file.name,
-                        mime=mime_type_for(report_file),
-                        key=f"dl_report_{i}",
-                        use_container_width=True,
-                    )
-        else:
-            st.info(t("ds_no_downloadables", L))
+        c_pdf_tr, c_pdf_en = st.columns(2)
+        root_s = str(PROJECT_ROOT)
+        with c_pdf_tr:
+            try:
+                with st.spinner(t("ds_pdf_generating", L)):
+                    pdf_tr = _cached_uci_ds_pdf("tr", root_s)
+                st.download_button(
+                    t("ds_pdf_btn_tr", L),
+                    data=pdf_tr,
+                    file_name="uci_student_risk_ds_report_tr.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                    key="dl_ds_pdf_tr",
+                )
+            except Exception as e:
+                st.error(f"{t('ds_pdf_error', L)} ({e})")
+        with c_pdf_en:
+            try:
+                with st.spinner(t("ds_pdf_generating", L)):
+                    pdf_en = _cached_uci_ds_pdf("en", root_s)
+                st.download_button(
+                    t("ds_pdf_btn_en", L),
+                    data=pdf_en,
+                    file_name="uci_student_risk_ds_report_en.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                    key="dl_ds_pdf_en",
+                )
+            except Exception as e:
+                st.error(f"{t('ds_pdf_error', L)} ({e})")
 
         st.divider()
 
