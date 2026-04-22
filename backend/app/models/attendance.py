@@ -1,15 +1,7 @@
-"""
-Attendance model
-"""
-import sys
-import os
 from sqlalchemy import Column, Integer, String, ForeignKey, Date
 from sqlalchemy.orm import relationship
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from backend.app.core.database import Base
-
 
 class Attendance(Base):
     """Attendance model"""
@@ -20,7 +12,6 @@ class Attendance(Base):
     date = Column(Date, nullable=False)
     status = Column(String, nullable=False)  # "present", "absent", "excused"
     
-    # Relationships
     student = relationship("Student", back_populates="attendance_records")
     
     def __repr__(self):

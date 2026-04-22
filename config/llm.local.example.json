@@ -1,0 +1,5 @@
+{
+  "anthropic_api_key": "your-claude-api-key-here",
+  "anthropic_model": "claude-sonnet-4-6",
+  "openai_api_key": "your-openai-api-key-here"
+}

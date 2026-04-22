@@ -1,6 +1,8 @@
 version: '3.8'
 
 services:
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────────
   postgres:
     image: postgres:15-alpine
     container_name: school_postgres
@@ -18,16 +20,16 @@ services:
       timeout: 5s
       retries: 5
 
+  # ── Backend (FastAPI) ─────────────────────────────────────────────────────────
   backend:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: school_backend
+    env_file: .env                  # LLM_PROVIDER, ANTHROPIC_MODEL, SECRET_KEY buradan gelir
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/school_db
-      LLM_PROVIDER: ollama
-      OLLAMA_BASE_URL: http://ollama:11434
-      SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
+      LLM_CONFIG_PATH: config/llm.local.json
       DEBUG: "false"
     ports:
       - "8000:8000"
@@ -35,24 +37,17 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./backend:/app/backend
-      - ./config:/app/config
+      - ./config:/app/config              # llm.local.json (Anthropic API key)
+      - ./data_science:/app/data_science  # pipeline çıktıları (winner_model.pkl vb.)
     command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: school_ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    # Note: Model needs to be pulled manually: docker exec school_ollama ollama pull deepseek-r1:7b
-
+  # ── Frontend (Streamlit) ──────────────────────────────────────────────────────
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
     container_name: school_frontend
+    env_file: .env
     environment:
       API_BASE_URL: http://backend:8000
     ports:
@@ -60,8 +55,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./frontend:/app/frontend
+      - ./data_science:/app/data_science  # DS sekmesi görselleri canlı güncellenir
 
 volumes:
   postgres_data:
-  ollama_data:

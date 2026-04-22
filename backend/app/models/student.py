@@ -1,15 +1,7 @@
-"""
-Student model
-"""
-import sys
-import os
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from backend.app.core.database import Base
-
 
 class Student(Base):
     """Student model"""
@@ -21,7 +13,6 @@ class Student(Base):
     total_absences = Column(Integer, default=0)
     parent_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # Parent user ID
     
-    # Relationships
     grades = relationship("Grade", back_populates="student", cascade="all, delete-orphan")
     attendance_records = relationship("Attendance", back_populates="student", cascade="all, delete-orphan")
     

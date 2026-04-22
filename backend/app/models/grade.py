@@ -1,15 +1,7 @@
-"""
-Grade model
-"""
-import sys
-import os
 from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float
 from sqlalchemy.orm import relationship
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from backend.app.core.database import Base
-
 
 class Grade(Base):
     """Grade model"""
@@ -21,7 +13,6 @@ class Grade(Base):
     grade = Column(Float, nullable=False)
     date = Column(Date, nullable=False)
     
-    # Relationships
     student = relationship("Student", back_populates="grades")
     
     def __repr__(self):

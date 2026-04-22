@@ -1,0 +1,9 @@
+{
+  "feature_set": "base",
+  "model": "gradient_boosting",
+  "f1": 0.9561,
+  "roc_auc": 0.9925,
+  "accuracy": 0.9655,
+  "precision": 0.9515,
+  "recall": 0.9608
+}

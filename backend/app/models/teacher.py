@@ -1,14 +1,6 @@
-"""
-Teacher model
-"""
-import sys
-import os
 from sqlalchemy import Column, Integer, String
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from backend.app.core.database import Base
-
 
 class Teacher(Base):
     """Teacher model"""

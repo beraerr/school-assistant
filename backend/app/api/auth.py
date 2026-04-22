@@ -1,15 +1,8 @@
-"""
-Authentication endpoints
-"""
-import sys
-import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from datetime import timedelta
 
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 from backend.app.core.database import get_db
 from backend.app.core.security import verify_password, create_access_token
 from backend.app.models.user import User
@@ -17,17 +10,14 @@ from config.settings import settings
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
-
 class LoginRequest(BaseModel):
     username: str
     password: str
-
 
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str
     user: dict
-
 
 @router.post("/login", response_model=LoginResponse)
 async def login(login_data: LoginRequest, db: Session = Depends(get_db)):
