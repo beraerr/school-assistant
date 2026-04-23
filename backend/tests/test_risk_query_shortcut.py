@@ -5,6 +5,8 @@ from backend.app.services.query_shortcuts import (
 )
 from backend.app.services.query_shortcuts.risk_summary import _pick_highest_risk_items
 from backend.app.services.query_shortcuts.risk_summary import _wants_full_list
+from backend.app.services.query_shortcuts.risk_summary import _wants_at_risk_list
+from backend.app.services.query_shortcuts.risk_summary import _wants_risk_meaning
 from backend.app.api.risk import RiskItem
 
 def test_risk_success_regex_matches_achievement_questions():
@@ -13,6 +15,10 @@ def test_risk_success_regex_matches_achievement_questions():
     assert _RISK_SUCCESS_RE.search("risk skoru nedir")
     assert _RISK_SUCCESS_RE.search("give these risk values")
     assert _RISK_SUCCESS_RE.search("genel akademik durum nasıl")
+    assert _RISK_SUCCESS_RE.search("kimler riskli")
+    assert _RISK_SUCCESS_RE.search("hangi öğrenciler risk altında")
+    assert _RISK_SUCCESS_RE.search("kimler neden riskli")
+    assert _RISK_SUCCESS_RE.search("bu risk ne anlama geliyor")
     assert not _RISK_SUCCESS_RE.search("Bu ay devamsızlığı 5 günü geçen öğrencileri göster")
 
 def _stu(name: str, sid: int = 1) -> Student:
@@ -80,3 +86,16 @@ def test_wants_full_list_only_when_explicit():
     assert _wants_full_list("tüm öğrencilerin risk listesini ver")
     assert _wants_full_list("show all students risk scores")
     assert not _wants_full_list("risk durumu nedir")
+
+
+def test_wants_at_risk_list_for_riskli_queries():
+    assert _wants_at_risk_list("kimler riskli")
+    assert _wants_at_risk_list("hangi öğrenciler risk altında")
+    assert _wants_at_risk_list("risk içerisindeki öğrencileri göster")
+    assert not _wants_at_risk_list("risk ne anlama geliyor")
+
+
+def test_wants_risk_meaning_query():
+    assert _wants_risk_meaning("bu risk ne anlama geliyor")
+    assert _wants_risk_meaning("what does this risk mean")
+    assert not _wants_risk_meaning("kimler riskli")

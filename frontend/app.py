@@ -285,15 +285,17 @@ if st.session_state.access_token is None:
     st.header(t("login_header", L))
     col1, col2 = st.columns([1, 1])
     with col1:
-        username = st.text_input(t("username", L), key="login_username")
-        password = st.text_input(t("password", L), type="password", key="login_password")
-        if st.button(t("login_btn", L), type="primary"):
+        with st.form("login_form", clear_on_submit=False):
+            username = st.text_input(t("username", L), key="login_username")
+            password = st.text_input(t("password", L), type="password", key="login_password")
+            login_clicked = st.form_submit_button(t("login_btn", L), type="primary")
+        if login_clicked:
             if username and password:
                 if login(username, password):
                     st.session_state.chat_history = []
                     st.session_state.pop("query_pending", None)
-                    st.success(t("login_ok", L))
                     safe_rerun()
+                    st.stop()
             else:
                 st.warning(t("login_need_creds", L))
     with col2:
@@ -385,23 +387,23 @@ else:
                 st.session_state.chat_history = []
                 safe_rerun()
 
-        c_query_input, c_query_send = st.columns([5, 1])
         chat_input_key = f"chat_prompt_input_{st.session_state.chat_input_nonce}"
-        with c_query_input:
-            prompt = st.text_input(
-                t("chat_input_placeholder", L),
-                key=chat_input_key,
-                disabled=st.session_state.query_running,
-                label_visibility="collapsed",
-            )
-        with c_query_send:
-            send_clicked = st.button(
-                t("run_query", L),
-                key="chat_send_btn",
-                type="primary",
-                use_container_width=True,
-                disabled=st.session_state.query_running,
-            )
+        with st.form("chat_query_form", clear_on_submit=False):
+            c_query_input, c_query_send = st.columns([5, 1])
+            with c_query_input:
+                prompt = st.text_input(
+                    t("chat_input_placeholder", L),
+                    key=chat_input_key,
+                    disabled=st.session_state.query_running,
+                    label_visibility="collapsed",
+                )
+            with c_query_send:
+                send_clicked = st.form_submit_button(
+                    t("run_query", L),
+                    type="primary",
+                    use_container_width=True,
+                    disabled=st.session_state.query_running,
+                )
 
         if send_clicked and prompt.strip():
             clean_prompt = prompt.strip()
