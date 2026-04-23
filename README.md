@@ -35,6 +35,8 @@ Backend: `http://localhost:8000`
 Frontend: `http://localhost:8501`
 API docs: `http://localhost:8000/docs`
 
+Demo (canlı): [http://46.224.34.44:8501/](http://46.224.34.44:8501/)
+
 Manuel kurulum için:
 
 ```bash
@@ -93,6 +95,8 @@ pip install -r requirements.txt
 uvicorn backend.app.main:app --reload
 streamlit run frontend/app.py
 ```
+
+Live demo: [http://46.224.34.44:8501/](http://46.224.34.44:8501/)
 
 ## Environment Variables
 

@@ -10,7 +10,7 @@ from backend.app.models.user import User, UserRole
 
 _PARENT_CHILD_RE = re.compile(
     r"(ben\s+kimin\s+velisi(yim)?|kimin\s+velisi(yim)?|"
-    r"çocuğum(\s+kim)?|çocuğumun\s+(adı|ismi)|"
+    r"çocuğum(\s+kim)?\b|çocuğumun\s+(adı|ismi)|"
     r"öğrenci(nin|min)?\s+adı|öğrencim(in)?\s+(adı|kim|ismi)|"
     r"bağlı\s+olduğum\s+öğrenci|velisi\s+olduğum\s+öğrenci|"
     r"who\s+is\s+my\s+child|which\s+student.*\bparent\b)",

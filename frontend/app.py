@@ -846,3 +846,6 @@ with app_root.container():
                     )
                     with st.expander(model_label):
                         st.code(p.read_text(encoding="utf-8"), language="text")
+
+st.markdown("---")
+st.caption("// Dokümantasyon / Documentation: [GitHub Repository](https://github.com/beraerr/school-assistant)")
