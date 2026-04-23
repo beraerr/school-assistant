@@ -47,6 +47,15 @@ _RISK_MEANING_RE = re.compile(
     re.IGNORECASE | re.UNICODE,
 )
 
+_FORCE_SQL_RISK_RE = re.compile(
+    r"en\s+yuksek|en\s+yüksek|highest|top|"
+    r"kaç\s+öğrenci|kac\s+ogrenci|how\s+many|count|"
+    r"kimler\s+riskli|hangi\s+öğrenciler\s+riskli|hangi\s+ogrenciler\s+riskli|"
+    r"risk\s+altinda|risk\s+altında|risk\s+icerisindeki|risk\s+içerisindeki|"
+    r"riskli\s+öğrenci|riskli\s+ogrenci",
+    re.IGNORECASE | re.UNICODE,
+)
+
 _TOKEN_RE = re.compile(r"[A-Za-zçğıöşüÇĞİÖŞÜ]+", re.UNICODE)
 _POSSESSIVE_SUFFIXES = (
     "larından", "lerinden", "larına", "lerine", "larında", "lerinde",
@@ -138,6 +147,10 @@ def _wants_at_risk_list(question: str) -> bool:
 def _wants_risk_meaning(question: str) -> bool:
     return bool(_RISK_MEANING_RE.search((question or "").strip()))
 
+def _prefer_sql_risk_query(question: str) -> bool:
+    q = (question or "").strip()
+    return bool(_FORCE_SQL_RISK_RE.search(q)) and not _wants_risk_meaning(q)
+
 def _meaning_text(ui_lang: str) -> str:
     if (ui_lang or "tr") == "en":
         return (
@@ -184,21 +197,22 @@ def try_risk_success_answer(
 ) -> Optional[Dict[str, Any]]:
     if not _RISK_SUCCESS_RE.search((question or "").strip()):
         return None
-    if _wants_risk_meaning(question):
-        return {
-            "results": [],
-            "sql_query": "",
-            "original_query": question,
-            "explanation": _meaning_text(ui_lang or "tr"),
-            "permissions_applied": True,
-            "permission_reason": (
-                "Risk açıklaması — kural tabanlı"
-                if (ui_lang or "tr") == "tr"
-                else "Risk meaning — rule based"
-            ),
-            "results_count": 0,
-            "conversation_mode": "chat",
-        }
+    if not _wants_risk_meaning(question):
+        return None
+    return {
+        "results": [],
+        "sql_query": "",
+        "original_query": question,
+        "explanation": _meaning_text(ui_lang or "tr"),
+        "permissions_applied": True,
+        "permission_reason": (
+            "Risk açıklaması — kural tabanlı"
+            if (ui_lang or "tr") == "tr"
+            else "Risk meaning — rule based"
+        ),
+        "results_count": 0,
+        "conversation_mode": "chat",
+    }
 
     students = filter_students_for_risk(db, user, class_name=None)
     if not students:

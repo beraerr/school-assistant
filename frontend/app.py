@@ -101,6 +101,8 @@ if "query_running" not in st.session_state:
     st.session_state.query_running = False
 if "chat_input_nonce" not in st.session_state:
     st.session_state.chat_input_nonce = 0
+if "_post_auth_refresh" not in st.session_state:
+    st.session_state._post_auth_refresh = False
 
 def login(username: str, password: str) -> bool:
     try:
@@ -277,145 +279,160 @@ def pack_query_assistant_turn(result: dict, lng: Lang) -> Dict[str, Any]:
     text = "\n".join(lines).strip() or "…"
     return {"md": text, "df": df}
 
-st.title(t("page_title", L))
-st.caption("Türkçe + English UI | Aynı backend")
-st.markdown("---")
+if st.session_state._post_auth_refresh:
+    st.session_state._post_auth_refresh = False
+    safe_rerun()
+    st.stop()
 
-if st.session_state.access_token is None:
-    st.header(t("login_header", L))
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        with st.form("login_form", clear_on_submit=False):
-            username = st.text_input(t("username", L), key="login_username")
-            password = st.text_input(t("password", L), type="password", key="login_password")
-            login_clicked = st.form_submit_button(t("login_btn", L), type="primary")
-        if login_clicked:
-            if username and password:
-                if login(username, password):
-                    st.session_state.chat_history = []
-                    st.session_state.pop("query_pending", None)
-                    safe_rerun()
-                    st.stop()
-            else:
-                st.warning(t("login_need_creds", L))
-    with col2:
-        st.info(t("login_ds_access_notice", L))
-        st.info(t("demo_users", L))
+app_root = st.empty()
+with app_root.container():
+    st.title(t("page_title", L))
+    st.caption("Türkçe + English UI | Aynı backend")
+    st.markdown("---")
 
-else:
-    user = st.session_state.user
+    if st.session_state.access_token is None:
+        st.header(t("login_header", L))
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            with st.form("login_form", clear_on_submit=False):
+                username = st.text_input(t("username", L), key="login_username")
+                password = st.text_input(t("password", L), type="password", key="login_password")
+                login_clicked = st.form_submit_button(t("login_btn", L), type="primary")
+            if login_clicked:
+                if username and password:
+                    if login(username, password):
+                        st.session_state.chat_history = []
+                        st.session_state.pop("query_pending", None)
+                        st.session_state._post_auth_refresh = True
+                        app_root.empty()
+                        safe_rerun()
+                        st.stop()
+                else:
+                    st.warning(t("login_need_creds", L))
+        with col2:
+            st.info(t("login_ds_access_notice", L))
+            st.info(t("demo_users", L))
 
-    with st.sidebar:
-        st.header(t("user_info", L))
-        st.write(f"**{t('user_label', L)}:** {user['username']}")
-        st.write(f"**{t('role_label', L)}:** {role_name(user['role'], L)}")
-        if user.get("related_class"):
-            st.write(f"**{t('class_label', L)}:** {user['related_class']}")
-        st.markdown("---")
-        if st.button(t("logout", L)):
-            st.session_state.access_token = None
-            st.session_state.user = None
-            st.session_state.pop("chat_history", None)
-            st.session_state.pop("query_pending", None)
-            safe_rerun()
-
-    is_principal = user["role"] == "principal"
-    tab_labels = [t("tab_query", L), t("tab_risk", L)]
-    if is_principal:
-        tab_labels.append(t("tab_ds", L))
     else:
-        tab_labels.append(t("tab_ds_locked", L))
-    query_tab, risk_tab, ds_tab = st.tabs(tab_labels)
+        user = st.session_state.user
 
-    with query_tab:
-        st.header(t("query_header", L))
-        st.markdown(t("query_help", L))
-        if "chat_history" not in st.session_state:
-            st.session_state.chat_history = []
+        with st.sidebar:
+            st.header(t("user_info", L))
+            st.write(f"**{t('user_label', L)}:** {user['username']}")
+            st.write(f"**{t('role_label', L)}:** {role_name(user['role'], L)}")
+            if user.get("related_class"):
+                st.write(f"**{t('class_label', L)}:** {user['related_class']}")
+            st.markdown("---")
+            if st.button(t("logout", L)):
+                st.session_state.access_token = None
+                st.session_state.user = None
+                st.session_state.pop("chat_history", None)
+                st.session_state.pop("query_pending", None)
+                st.session_state._post_auth_refresh = True
+                app_root.empty()
+                safe_rerun()
+                st.stop()
 
-        role = user["role"]
-        ex = example_queries_for_role(role, L)
-        if ex:
-            with st.expander(t("example_queries", L)):
-                for i, example in enumerate(ex):
-                    if st.button(
-                        example,
-                        key=f"example_{i}",
+        is_principal = user["role"] == "principal"
+        tab_labels = [t("tab_query", L), t("tab_risk", L)]
+        if is_principal:
+            tab_labels.append(t("tab_ds", L))
+        else:
+            tab_labels.append(t("tab_ds_locked", L))
+        query_tab, risk_tab, ds_tab = st.tabs(tab_labels)
+
+        with query_tab:
+            st.header(t("query_header", L))
+            st.markdown(t("query_help", L))
+            if "chat_history" not in st.session_state:
+                st.session_state.chat_history = []
+
+            role = user["role"]
+            ex = example_queries_for_role(role, L)
+            if ex:
+                with st.expander(t("example_queries", L)):
+                    for i, example in enumerate(ex):
+                        if st.button(
+                            example,
+                            key=f"example_{i}",
+                            use_container_width=True,
+                            disabled=st.session_state.query_running,
+                        ):
+                            st.session_state.query_pending = example
+                            safe_rerun()
+
+            if st.session_state.get("query_pending"):
+                pending_q = st.session_state.query_pending
+                st.session_state.query_pending = None
+                pending_res = execute_query_with_spinner(pending_q, L)
+                if pending_res:
+                    st.session_state.chat_history.append({"role": "user", "content": pending_q})
+                    packed = pack_query_assistant_turn(pending_res, L)
+                    st.session_state.chat_history.append(
+                        {"role": "assistant", "content": packed["md"], "df": packed["df"]}
+                    )
+                    safe_rerun()
+
+            for i, turn in enumerate(st.session_state.chat_history):
+                with st.chat_message(turn["role"]):
+                    st.markdown(turn["content"])
+                    df_turn = turn.get("df")
+                    if df_turn is not None:
+                        if df_turn.empty:
+                            st.info(t("empty_results", L))
+                        else:
+                            st.dataframe(df_turn, use_container_width=True)
+                            csv = df_turn.to_csv(index=False).encode("utf-8-sig")
+                            st.download_button(
+                                label=t("download_csv", L),
+                                data=csv,
+                                file_name="query_results.csv",
+                                mime="text/csv",
+                                key=f"csv_dl_{i}",
+                            )
+
+            c_clear, _ = st.columns([1, 5])
+            with c_clear:
+                if st.button(
+                    t("chat_clear", L),
+                    key="chat_clear_btn",
+                    disabled=st.session_state.query_running,
+                ):
+                    st.session_state.chat_history = []
+                    safe_rerun()
+
+            chat_input_key = f"chat_prompt_input_{st.session_state.chat_input_nonce}"
+            with st.form("chat_query_form", clear_on_submit=False):
+                c_query_input, c_query_send = st.columns([5, 1])
+                with c_query_input:
+                    prompt = st.text_input(
+                        t("chat_input_placeholder", L),
+                        key=chat_input_key,
+                        disabled=st.session_state.query_running,
+                        label_visibility="collapsed",
+                    )
+                with c_query_send:
+                    send_clicked = st.form_submit_button(
+                        t("run_query", L),
+                        type="primary",
                         use_container_width=True,
                         disabled=st.session_state.query_running,
-                    ):
-                        st.session_state.query_pending = example
-                        safe_rerun()
+                    )
 
-        if st.session_state.get("query_pending"):
-            pending_q = st.session_state.query_pending
-            st.session_state.query_pending = None
-            pending_res = execute_query_with_spinner(pending_q, L)
-            if pending_res:
-                st.session_state.chat_history.append({"role": "user", "content": pending_q})
-                packed = pack_query_assistant_turn(pending_res, L)
-                st.session_state.chat_history.append(
-                    {"role": "assistant", "content": packed["md"], "df": packed["df"]}
-                )
-                safe_rerun()
+            if send_clicked and prompt.strip():
+                clean_prompt = prompt.strip()
+                res = execute_query_with_spinner(clean_prompt, L)
+                if res:
+                    st.session_state.chat_history.append({"role": "user", "content": clean_prompt})
+                    packed = pack_query_assistant_turn(res, L)
+                    st.session_state.chat_history.append(
+                        {"role": "assistant", "content": packed["md"], "df": packed["df"]}
+                    )
+                    st.session_state.chat_input_nonce += 1
+                    safe_rerun()
 
-        for i, turn in enumerate(st.session_state.chat_history):
-            with st.chat_message(turn["role"]):
-                st.markdown(turn["content"])
-                df_turn = turn.get("df")
-                if df_turn is not None:
-                    if df_turn.empty:
-                        st.info(t("empty_results", L))
-                    else:
-                        st.dataframe(df_turn, use_container_width=True)
-                        csv = df_turn.to_csv(index=False).encode("utf-8-sig")
-                        st.download_button(
-                            label=t("download_csv", L),
-                            data=csv,
-                            file_name="query_results.csv",
-                            mime="text/csv",
-                            key=f"csv_dl_{i}",
-                        )
-
-        c_clear, _ = st.columns([1, 5])
-        with c_clear:
-            if st.button(
-                t("chat_clear", L),
-                key="chat_clear_btn",
-                disabled=st.session_state.query_running,
-            ):
-                st.session_state.chat_history = []
-                safe_rerun()
-
-        chat_input_key = f"chat_prompt_input_{st.session_state.chat_input_nonce}"
-        with st.form("chat_query_form", clear_on_submit=False):
-            c_query_input, c_query_send = st.columns([5, 1])
-            with c_query_input:
-                prompt = st.text_input(
-                    t("chat_input_placeholder", L),
-                    key=chat_input_key,
-                    disabled=st.session_state.query_running,
-                    label_visibility="collapsed",
-                )
-            with c_query_send:
-                send_clicked = st.form_submit_button(
-                    t("run_query", L),
-                    type="primary",
-                    use_container_width=True,
-                    disabled=st.session_state.query_running,
-                )
-
-        if send_clicked and prompt.strip():
-            clean_prompt = prompt.strip()
-            res = execute_query_with_spinner(clean_prompt, L)
-            if res:
-                st.session_state.chat_history.append({"role": "user", "content": clean_prompt})
-                packed = pack_query_assistant_turn(res, L)
-                st.session_state.chat_history.append(
-                    {"role": "assistant", "content": packed["md"], "df": packed["df"]}
-                )
-                st.session_state.chat_input_nonce += 1
-                safe_rerun()
+    if st.session_state.access_token is None:
+        st.stop()
 
     with risk_tab:
         st.header(t("risk_header", L))

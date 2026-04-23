@@ -233,10 +233,13 @@ RULES:
 6. Use correct foreign keys when JOINing
 7. Do not use emojis in any output
 8. End the statement with a semicolon OR end immediately after the final SQL token — never append text after the semicolon
-9. If the question is about student performance, achievement (başarı), risk level, or future outlook, include ML columns via
+9. If the question mentions risk (risk, riskli, risk altında, high risk, risk score, risk level), always join:
    LEFT JOIN student_risk_scores srs ON srs.student_id = <students-alias>.id
-   (use the same table alias you used for students in FROM) and select srs.ml_risk_score, srs.ml_risk_level, srs.computed_at
-10. "Geçen aya göre" / "last month comparison" queries: use the two-join pattern from Rule 3 to compare
+   and include risk outputs. At minimum include one of `srs.ml_risk_score` or `srs.ml_risk_level`; prefer returning both.
+10. For "who is risky / which students are at risk / high risk students", filter with:
+    srs.ml_risk_level IN ('high','medium') (or only 'high' if explicitly requested).
+11. For "highest risk" style questions, order by srs.ml_risk_score DESC and apply LIMIT when the user asks singular/top-k.
+12. "Geçen aya göre" / "last month comparison" queries: use the two-join pattern from Rule 3 to compare
     grades within the last 30 days against the previous 30-day window.
 
 User query: {{query}}

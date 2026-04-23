@@ -7,6 +7,7 @@ from backend.app.services.query_shortcuts.risk_summary import _pick_highest_risk
 from backend.app.services.query_shortcuts.risk_summary import _wants_full_list
 from backend.app.services.query_shortcuts.risk_summary import _wants_at_risk_list
 from backend.app.services.query_shortcuts.risk_summary import _wants_risk_meaning
+from backend.app.services.query_shortcuts.risk_summary import _prefer_sql_risk_query
 from backend.app.api.risk import RiskItem
 
 def test_risk_success_regex_matches_achievement_questions():
@@ -99,3 +100,10 @@ def test_wants_risk_meaning_query():
     assert _wants_risk_meaning("bu risk ne anlama geliyor")
     assert _wants_risk_meaning("what does this risk mean")
     assert not _wants_risk_meaning("kimler riskli")
+
+
+def test_prefer_sql_risk_query_for_operational_questions():
+    assert _prefer_sql_risk_query("risk skoru en yüksek öğrenciyi göster")
+    assert _prefer_sql_risk_query("yüksek riskte kaç öğrenci var")
+    assert _prefer_sql_risk_query("kimler riskli")
+    assert not _prefer_sql_risk_query("bu risk ne anlama geliyor")
