@@ -10,14 +10,11 @@ class Settings(BaseSettings):
         "postgresql://postgres:postgres@localhost:5432/school_db"
     )
     
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "ollama")  # ollama, openai, anthropic
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "deepseek-r1:7b")
-    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY", None)
-    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4")
+    # Application is intentionally locked to Anthropic/Claude to avoid
+    # provider drift across different run environments.
+    LLM_PROVIDER: str = "anthropic"
     ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY", None)
     ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-6")
-    LLM_CONFIG_PATH: str = os.getenv("LLM_CONFIG_PATH", "config/llm.local.json")
     
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
     ALGORITHM: str = "HS256"

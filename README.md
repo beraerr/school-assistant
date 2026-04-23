@@ -49,11 +49,9 @@ streamlit run frontend/app.py              # terminal 2
 ```
 DATABASE_URL       → PostgreSQL bağlantısı
 ANTHROPIC_API_KEY  → Claude API key
-LLM_PROVIDER       → anthropic veya ollama
+ANTHROPIC_MODEL    → Claude model id (örn. claude-sonnet-4-6)
 SECRET_KEY         → JWT imzalama için rastgele string
 ```
-
-LLM yapılandırması `config/llm.local.json` dosyasından da okunabiliyor (gitignore'da).
 
 ## Testler
 
@@ -78,7 +76,7 @@ There's also a risk scoring module that combines attendance, grade trends, and b
 - **Backend:** FastAPI, SQLAlchemy, JWT authentication
 - **Frontend:** Streamlit with Turkish/English toggle
 - **Database:** PostgreSQL
-- **AI:** Anthropic Claude (primary), Ollama support for local LLMs
+- **AI:** Anthropic Claude
 - **ML:** scikit-learn risk pipeline
 
 ## Running Locally
@@ -101,7 +99,7 @@ streamlit run frontend/app.py
 ```
 DATABASE_URL       → PostgreSQL connection string
 ANTHROPIC_API_KEY  → Claude API key
-LLM_PROVIDER       → anthropic or ollama
+ANTHROPIC_MODEL    → Claude model id (e.g. claude-sonnet-4-6)
 SECRET_KEY         → random string for JWT signing
 ```
 

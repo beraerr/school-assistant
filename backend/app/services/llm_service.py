@@ -1,5 +1,4 @@
 import json
-import os
 import re
 from typing import Any, Dict, List, Optional
 
@@ -58,23 +57,11 @@ class LLMService:
     """Modular LLM service for Turkish NLQ to SQL conversion"""
     
     def __init__(self):
-        self.provider = settings.LLM_PROVIDER.lower()
-        self.llm_local_config = self._load_local_llm_config()
-        if self.provider == "ollama":
-            self.model = settings.OLLAMA_MODEL
-        elif self.provider == "openai":
-            self.model = settings.OPENAI_MODEL
-        elif self.provider == "anthropic":
-            self.model = self._anthropic_model_id()
-        else:
-            self.model = "unknown"
+        self.provider = "anthropic"
+        self.model = self._anthropic_model_id()
         self.prompt_template = self._create_prompt_template()
 
     def _anthropic_model_id(self) -> str:
-        """Prefer config/llm.local.json so shell ANTHROPIC_MODEL cannot pin a retired id."""
-        raw = self.llm_local_config.get("anthropic_model")
-        if isinstance(raw, str) and raw.strip():
-            return raw.strip()
         return (settings.ANTHROPIC_MODEL or "").strip() or "claude-sonnet-4-6"
 
     @staticmethod
@@ -82,66 +69,11 @@ class LLMService:
         """Proje yalnızca PostgreSQL kullanır. / Project uses PostgreSQL only."""
         return "postgresql"
 
-    def _load_local_llm_config(self) -> Dict[str, Any]:
-        """
-        Load optional local credentials file, ignored by git.
-        Environment variables still take precedence.
-        """
-        config_path = settings.LLM_CONFIG_PATH
-        if not config_path:
-            return {}
-        if not os.path.exists(config_path):
-            return {}
-        try:
-            with open(config_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception as exc:
-            logger.warning(f"Could not read local LLM config: {exc}")
-            return {}
-    
-    def _call_ollama(self, prompt: str) -> str:
-        """Call Ollama generate API and return plain text output."""
-        response = requests.post(
-            f"{settings.OLLAMA_BASE_URL}/api/generate",
-            json={
-                "model": settings.OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False
-            },
-            timeout=60
-        )
-        response.raise_for_status()
-        return response.json().get("response", "").strip()
-
-    def _call_openai(self, prompt: str) -> str:
-        """Call OpenAI chat completions API and return plain text output."""
-        openai_api_key = settings.OPENAI_API_KEY or self.llm_local_config.get("openai_api_key")
-        if not openai_api_key:
-            raise ValueError("OPENAI_API_KEY not set in environment")
-        response = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {openai_api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": settings.OPENAI_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.1
-            },
-            timeout=60
-        )
-        response.raise_for_status()
-        choices = response.json().get("choices", [])
-        if not choices:
-            return ""
-        return choices[0]["message"]["content"].strip()
-
     def _call_anthropic(self, prompt: str, max_tokens: int = 800) -> str:
         """Call Anthropic Messages API and return plain text output."""
-        anthropic_api_key = settings.ANTHROPIC_API_KEY or self.llm_local_config.get("anthropic_api_key")
+        anthropic_api_key = settings.ANTHROPIC_API_KEY
         if not anthropic_api_key:
-            raise ValueError("ANTHROPIC_API_KEY not set in environment or local config")
+            raise ValueError("ANTHROPIC_API_KEY not set in environment")
 
         model_id = self._anthropic_model_id()
         response = requests.post(
@@ -162,8 +94,7 @@ class LLMService:
         if response.status_code == 404:
             raise ValueError(
                 f"Anthropic HTTP 404: model '{model_id}' is unknown or retired. "
-                "Set `anthropic_model` in config/llm.local.json (overrides env) or ANTHROPIC_MODEL in .env "
-                "to a current id (e.g. claude-sonnet-4-6). If your shell exports ANTHROPIC_MODEL, run `unset ANTHROPIC_MODEL`."
+                "Set ANTHROPIC_MODEL in .env to a current id (e.g. claude-sonnet-4-6)."
             )
         response.raise_for_status()
         content = response.json().get("content", [])
@@ -173,13 +104,7 @@ class LLMService:
 
     def _invoke(self, prompt: str, max_tokens: Optional[int] = None) -> str:
         """Route prompt to configured provider."""
-        if self.provider == "ollama":
-            return self._call_ollama(prompt)
-        if self.provider == "openai":
-            return self._call_openai(prompt)
-        if self.provider == "anthropic":
-            return self._call_anthropic(prompt, max_tokens=max_tokens or 800)
-        raise ValueError(f"Unsupported LLM provider: {settings.LLM_PROVIDER}")
+        return self._call_anthropic(prompt, max_tokens=max_tokens or 800)
 
     @staticmethod
     def _extract_json_object(text: str) -> Optional[dict]:

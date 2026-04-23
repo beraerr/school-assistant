@@ -38,7 +38,6 @@ Dockerfile Path: Dockerfile
 
 **Settings > Variables** (şunları ekle):
 ```
-LLM_PROVIDER=anthropic
 ANTHROPIC_MODEL=claude-sonnet-4-6
 ANTHROPIC_API_KEY=sk-ant-api03-...   ← kendi key'in
 SECRET_KEY=<rastgele-güçlü-string>
@@ -76,7 +75,7 @@ Her iki servisi de **"Deploy"** yap. İlk build 3–5 dakika sürer.
 ## Notlar
 
 - Railway **free tier**: 500 saat/ay + 1 GB PostgreSQL (demo için yeterli)
-- `config/llm.local.json` gitignore'da — API key güvende ✓
+- API key'i sadece Railway Variables içinde tut (repo dosyalarına yazma) ✓
 - Streamlit'te API URL'yi frontend sidebar'dan da değiştirebilirsin
 
 ---

@@ -4,7 +4,6 @@
 # Çalıştır: bash setup.sh
 #
 # Ortam değişkenleri (isteğe bağlı):
-#   LLM_CONFIG_SOURCE=/yol/llm.local.json  — mevcut Claude config'i kopyalar
 #   SKIP_PIP_INSTALL=1                      — pip adımını atlar (venv hazırsa)
 #
 # Önerilen Python: 3.11 veya 3.12. 3.14 ile pandas vb. teker teker derlenemeyebilir.
@@ -55,9 +54,7 @@ if [ ! -f ".env" ]; then
   echo "→ .env dosyası oluşturuluyor..."
   cat > .env << 'EOF'
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/school_db
-LLM_PROVIDER=anthropic
 ANTHROPIC_MODEL=claude-sonnet-4-6
-LLM_CONFIG_PATH=config/llm.local.json
 SECRET_KEY=dev-secret-key-change-in-production
 DEBUG=false
 EOF
@@ -66,25 +63,14 @@ else
   echo "→ .env zaten var, atlanıyor."
 fi
 
-# ── 4. LLM config ──────────────────────────────────────────────────────────────
-# İsteğe bağlı: mevcut bir dosyadan kopyala (repoya girmez)
-#   LLM_CONFIG_SOURCE=~/yol/llm.local.json bash setup.sh
-if [ -n "${LLM_CONFIG_SOURCE:-}" ] && [ -f "$LLM_CONFIG_SOURCE" ]; then
-  mkdir -p config
-  cp "$LLM_CONFIG_SOURCE" config/llm.local.json
-  echo "→ LLM config kopyalandı: $LLM_CONFIG_SOURCE → config/llm.local.json"
-elif [ ! -f "config/llm.local.json" ]; then
-  cp config/llm.local.example.json config/llm.local.json
+# ── 4. Claude key kontrolü ─────────────────────────────────────────────────────
+if ! grep -E "^ANTHROPIC_API_KEY=.+" .env >/dev/null 2>&1; then
   echo ""
-  echo "UYARI: config/llm.local.json oluşturuldu (şablon)."
-  echo "    Anahtarı gir veya yeniden çalıştır:"
-  echo "    LLM_CONFIG_SOURCE=/yol/llm.local.json bash setup.sh"
-  echo "    nano config/llm.local.json"
-else
-  echo "→ config/llm.local.json mevcut, korunuyor."
+  echo "UYARI: .env içinde ANTHROPIC_API_KEY bulunamadı."
+  echo "    .env dosyasına key eklemeden sorgu akışı çalışmaz."
 fi
 
-# ── 5. PostgreSQL DB ──────────────────────────────────────────────────────────
+# ── 5. PostgreSQL DB ───────────────────────────────────────────────────────────
 echo ""
 echo "→ PostgreSQL veritabanları oluşturuluyor..."
 psql -U postgres -tc "SELECT 1 FROM pg_database WHERE datname='school_db'" | grep -q 1 \

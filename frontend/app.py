@@ -36,6 +36,31 @@ DS_TABLES = PROJECT_ROOT / "data_science" / "reports" / "tables"
 def _cached_uci_ds_pdf(lang: str, project_root_s: str) -> bytes:
     return build_uci_ds_report_pdf(lang=lang, project_root=Path(project_root_s))
 
+def show_image_safe(
+    image_path: Path,
+    *,
+    caption: Optional[str] = None,
+    use_container_width: bool = True,
+    width: Optional[int] = None,
+) -> None:
+    try:
+        try:
+            st.image(
+                str(image_path),
+                caption=caption,
+                use_container_width=use_container_width,
+                width=width,
+            )
+        except TypeError:
+            st.image(
+                str(image_path),
+                caption=caption,
+                use_column_width=use_container_width,
+                width=width,
+            )
+    except Exception:
+        st.warning(f"Image load failed: {image_path.name}")
+
 def lang() -> Lang:
     return st.session_state.ui_lang  # type: ignore[return-value]
 
@@ -519,7 +544,7 @@ else:
             cols_soc = st.columns(len(available_early))
             for col, (fn, cap) in zip(cols_soc, available_early):
                 with col:
-                    st.image(str(DS_FIGURES / fn), caption=cap, use_container_width=True)
+                    show_image_safe(DS_FIGURES / fn, caption=cap, use_container_width=True)
 
         eda_main_figs = [
             ("eda_grade_distributions.png", "Not Dağılımı / Grade Distributions"),
@@ -531,7 +556,7 @@ else:
             cols_eda = st.columns(len(available_eda))
             for col, (fn, cap) in zip(cols_eda, available_eda):
                 with col:
-                    st.image(str(DS_FIGURES / fn), caption=cap, use_container_width=True)
+                    show_image_safe(DS_FIGURES / fn, caption=cap, use_container_width=True)
 
         st.divider()
         st.subheader(t("ds_why_base_won_header", L))
@@ -551,7 +576,7 @@ else:
 
             fs_fig_path = DS_FIGURES / "feature_set_comparison.png"
             if fs_fig_path.exists():
-                st.image(str(fs_fig_path), use_container_width=True)
+                show_image_safe(fs_fig_path, use_container_width=True)
 
             st.markdown(f"**{t('ds_delta_header', L)}**")
             base_rows = cmp_fs[cmp_fs["feature_set"] == "base"].set_index("model")
@@ -612,7 +637,7 @@ else:
             if avail_remaining:
                 st.subheader(t("ds_social_eda_header", L))
                 for fn, cap in avail_remaining:
-                    st.image(str(DS_FIGURES / fn), caption=cap, use_container_width=True)
+                    show_image_safe(DS_FIGURES / fn, caption=cap, use_container_width=True)
 
         st.divider()
         st.subheader(t("ds_algo_header", L))
@@ -702,7 +727,7 @@ else:
                         p.stem.replace("confusion_matrix_", "").replace("_", " ").title()
                     )
                     with col:
-                        st.image(str(p), caption=model_label, use_container_width=True)
+                        show_image_safe(p, caption=model_label, use_container_width=True)
 
             fi_path = DS_FIGURES / "feature_importance_risk.png"
             if fi_path.exists():
@@ -715,7 +740,7 @@ else:
                     "High value = the model performs much worse without that feature."
                 )
                 st.caption(_fi_note)
-                st.image(str(fi_path), use_container_width=False, width=700)
+                show_image_safe(fi_path, use_container_width=False, width=700)
 
             rsp_path = DS_TABLES / "risk_score_preview.csv"
             if rsp_path.exists():
@@ -773,7 +798,7 @@ else:
                 for col, p in zip(shap_cols * 10, shap_files):
                     label = p.stem.replace("shap_", "").replace("_", " ").title()
                     with col:
-                        st.image(str(p), caption=label, use_container_width=True)
+                        show_image_safe(p, caption=label, use_container_width=True)
 
             report_files = (
                 sorted(DS_TABLES.glob("classification_report_*.txt"))

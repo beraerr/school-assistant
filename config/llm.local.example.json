@@ -1,5 +1,7 @@
 {
-  "anthropic_api_key": "your-claude-api-key-here",
-  "anthropic_model": "claude-sonnet-4-6",
-  "openai_api_key": "your-openai-api-key-here"
+  "note": "Deprecated: LLM credentials are now read from environment variables only.",
+  "required_env": [
+    "ANTHROPIC_API_KEY",
+    "ANTHROPIC_MODEL"
+  ]
 }
