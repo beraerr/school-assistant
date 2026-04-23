@@ -61,6 +61,17 @@ def show_image_safe(
     except Exception:
         st.warning(f"Image load failed: {image_path.name}")
 
+
+def safe_rerun() -> None:
+    rerun_fn = getattr(st, "rerun", None)
+    if callable(rerun_fn):
+        rerun_fn()
+        return
+    exp_rerun_fn = getattr(st, "experimental_rerun", None)
+    if callable(exp_rerun_fn):
+        exp_rerun_fn()
+
+
 def lang() -> Lang:
     return st.session_state.ui_lang  # type: ignore[return-value]
 
@@ -88,6 +99,8 @@ if "user" not in st.session_state:
     st.session_state.user = None
 if "query_running" not in st.session_state:
     st.session_state.query_running = False
+if "chat_input_nonce" not in st.session_state:
+    st.session_state.chat_input_nonce = 0
 
 def login(username: str, password: str) -> bool:
     try:
@@ -280,7 +293,7 @@ if st.session_state.access_token is None:
                     st.session_state.chat_history = []
                     st.session_state.pop("query_pending", None)
                     st.success(t("login_ok", L))
-                    st.rerun()
+                    safe_rerun()
             else:
                 st.warning(t("login_need_creds", L))
     with col2:
@@ -302,7 +315,7 @@ else:
             st.session_state.user = None
             st.session_state.pop("chat_history", None)
             st.session_state.pop("query_pending", None)
-            st.rerun()
+            safe_rerun()
 
     is_principal = user["role"] == "principal"
     tab_labels = [t("tab_query", L), t("tab_risk", L)]
@@ -330,7 +343,7 @@ else:
                         disabled=st.session_state.query_running,
                     ):
                         st.session_state.query_pending = example
-                        st.rerun()
+                        safe_rerun()
 
         if st.session_state.get("query_pending"):
             pending_q = st.session_state.query_pending
@@ -342,7 +355,7 @@ else:
                 st.session_state.chat_history.append(
                     {"role": "assistant", "content": packed["md"], "df": packed["df"]}
                 )
-                st.rerun()
+                safe_rerun()
 
         for i, turn in enumerate(st.session_state.chat_history):
             with st.chat_message(turn["role"]):
@@ -370,13 +383,14 @@ else:
                 disabled=st.session_state.query_running,
             ):
                 st.session_state.chat_history = []
-                st.rerun()
+                safe_rerun()
 
         c_query_input, c_query_send = st.columns([5, 1])
+        chat_input_key = f"chat_prompt_input_{st.session_state.chat_input_nonce}"
         with c_query_input:
             prompt = st.text_input(
                 t("chat_input_placeholder", L),
-                key="chat_prompt_input",
+                key=chat_input_key,
                 disabled=st.session_state.query_running,
                 label_visibility="collapsed",
             )
@@ -398,8 +412,8 @@ else:
                 st.session_state.chat_history.append(
                     {"role": "assistant", "content": packed["md"], "df": packed["df"]}
                 )
-                st.session_state.chat_prompt_input = ""
-                st.rerun()
+                st.session_state.chat_input_nonce += 1
+                safe_rerun()
 
     with risk_tab:
         st.header(t("risk_header", L))
