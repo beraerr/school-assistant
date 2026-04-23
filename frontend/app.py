@@ -347,17 +347,33 @@ else:
                 st.session_state.chat_history = []
                 st.rerun()
 
-        if prompt := st.chat_input(
-            t("chat_input_placeholder", L),
-            disabled=st.session_state.query_running,
-        ):
-            res = execute_query_with_spinner(prompt, L)
+        c_query_input, c_query_send = st.columns([5, 1])
+        with c_query_input:
+            prompt = st.text_input(
+                t("chat_input_placeholder", L),
+                key="chat_prompt_input",
+                disabled=st.session_state.query_running,
+                label_visibility="collapsed",
+            )
+        with c_query_send:
+            send_clicked = st.button(
+                t("run_query", L),
+                key="chat_send_btn",
+                type="primary",
+                use_container_width=True,
+                disabled=st.session_state.query_running,
+            )
+
+        if send_clicked and prompt.strip():
+            clean_prompt = prompt.strip()
+            res = execute_query_with_spinner(clean_prompt, L)
             if res:
-                st.session_state.chat_history.append({"role": "user", "content": prompt})
+                st.session_state.chat_history.append({"role": "user", "content": clean_prompt})
                 packed = pack_query_assistant_turn(res, L)
                 st.session_state.chat_history.append(
                     {"role": "assistant", "content": packed["md"], "df": packed["df"]}
                 )
+                st.session_state.chat_prompt_input = ""
                 st.rerun()
 
     with risk_tab:
