@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Dict, Literal, Optional
 
@@ -25,6 +26,17 @@ if "ui_lang" not in st.session_state:
 st.set_page_config(
     page_title="Akıllı Okul Bilgi Sistemi / Smart School",
     layout="wide",
+)
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    header {visibility: hidden;}
+    footer {visibility: hidden;}
+    [data-testid="stStatusWidget"] {visibility: hidden;}
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -87,11 +99,7 @@ with st.sidebar:
 L = lang()
 
 st.sidebar.markdown("---")
-API_BASE_URL = st.sidebar.text_input(
-    t("api_url", L),
-    value="http://localhost:8000",
-    help="FastAPI backend URL",
-)
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
 if "access_token" not in st.session_state:
     st.session_state.access_token = None
@@ -287,7 +295,6 @@ if st.session_state._post_auth_refresh:
 app_root = st.empty()
 with app_root.container():
     st.title(t("page_title", L))
-    st.caption("Türkçe + English UI | Aynı backend")
     st.markdown("---")
 
     if st.session_state.access_token is None:
