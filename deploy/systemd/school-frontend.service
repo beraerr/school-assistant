@@ -1,0 +1,20 @@
+[Unit]
+Description=School Assistant Frontend (Streamlit)
+After=network.target school-backend.service
+Requires=school-backend.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/.openclaw/workspace/school-assistant
+EnvironmentFile=/root/.openclaw/workspace/school-assistant/.env
+Environment=PYTHONPATH=/root/.openclaw/workspace/school-assistant
+ExecStart=/bin/bash /root/.openclaw/workspace/school-assistant/run_frontend.sh
+Restart=always
+RestartSec=3
+TimeoutStartSec=60
+StandardOutput=append:/root/.openclaw/workspace/school-assistant/logs/frontend.service.log
+StandardError=append:/root/.openclaw/workspace/school-assistant/logs/frontend.service.err.log
+
+[Install]
+WantedBy=multi-user.target

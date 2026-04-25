@@ -1,0 +1,19 @@
+[Unit]
+Description=School Assistant Backend (FastAPI)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/.openclaw/workspace/school-assistant
+EnvironmentFile=/root/.openclaw/workspace/school-assistant/.env
+Environment=PYTHONPATH=/root/.openclaw/workspace/school-assistant
+ExecStart=/bin/bash /root/.openclaw/workspace/school-assistant/run_backend.sh
+Restart=always
+RestartSec=3
+TimeoutStartSec=60
+StandardOutput=append:/root/.openclaw/workspace/school-assistant/logs/backend.service.log
+StandardError=append:/root/.openclaw/workspace/school-assistant/logs/backend.service.err.log
+
+[Install]
+WantedBy=multi-user.target

@@ -37,6 +37,24 @@ API docs: `http://localhost:8000/docs`
 
 Demo (canlı): [http://46.224.34.44:8501/](http://46.224.34.44:8501/)
 
+## Hetzner Auto-Restart (systemd)
+
+`nohup` yerine servis yöneticisi kullanın:
+
+```bash
+cd /root/.openclaw/workspace/school-assistant
+sudo bash deploy/systemd/install_services.sh
+```
+
+Servis kontrolü:
+
+```bash
+sudo systemctl status school-backend.service
+sudo systemctl status school-frontend.service
+sudo journalctl -u school-backend.service -f
+sudo journalctl -u school-frontend.service -f
+```
+
 Manuel kurulum için:
 
 ```bash

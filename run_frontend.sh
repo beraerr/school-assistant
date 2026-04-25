@@ -1,12 +1,11 @@
 #!/bin/bash
-# Run Streamlit frontend
+set -e
 
 cd "$(dirname "$0")"
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
-# Activate virtual environment if it exists
 if [ -d "venv" ]; then
     source venv/bin/activate
 fi
 
-streamlit run frontend/app.py
+exec streamlit run frontend/app.py --server.port="${PORT:-8501}" --server.address=0.0.0.0 --server.headless=true
