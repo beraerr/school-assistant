@@ -34,6 +34,7 @@ st.markdown(
     header {visibility: hidden;}
     footer {visibility: hidden;}
     [data-testid="stStatusWidget"] {visibility: hidden;}
+    [data-testid="stDecoration"] {display: none !important;}
     </style>
     """,
     unsafe_allow_html=True,
